@@ -1894,8 +1894,8 @@ class AgenticGrpoLearnerTest(parameterized.TestCase):
     )
     self.assertEqual(decoded_prompt.count("Assistant:"), 1)
     self.assertEqual(
-        decoded_completion.count("Assistant:"), 3
-    )  # 3 turns including trailing one for last env obs
+        decoded_completion.count("Assistant:"), 2
+    )  # 3 turns but terminal env obs does not append generation msg
 
   def test_compute_rloo_advantages(self):
     rewards = jnp.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])

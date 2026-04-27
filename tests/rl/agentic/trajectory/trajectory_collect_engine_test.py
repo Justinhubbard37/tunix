@@ -227,15 +227,20 @@ class TrajectoryCollectEngineTest(absltest.TestCase):
           logprobs=[[0.1] * len(tokens)],  # logprobs as a list
       )
 
-    self.mock_model_call.side_effect = [_mock_rollout_output_list_logprobs('resp', np.array([1, 2]))]
+    self.mock_model_call.side_effect = [
+        _mock_rollout_output_list_logprobs('resp', np.array([1, 2]))
+    ]
 
     engine = trajectory_collect_engine.TrajectoryCollectEngine(
         agent=self.mock_agent,
         env=self.mock_env,
         model_call=self.mock_model_call,
     )
-    # This should not raise AttributeError: 'list' object has no attribute 'size'
-    result_traj = asyncio.run(self._run_collect(engine, mode='Trajectory'))
+    # This should not raise AttributeError: 'list' object has no attribute
+    # 'size'
+    result_traj = asyncio.run(
+        self._run_collect(engine, mode='Trajectory')
+    )
     self.assertLen(result_traj.steps, 1)
     self.assertEqual(len(result_traj.steps[0].logprobs), 2)
 
@@ -283,9 +288,9 @@ class TrajectoryCollectEngineTest(absltest.TestCase):
         ],
         'prompt_tokens': np.array([101]),
         'conversation_tokens': np.array(
-            [201, 202, 301, 302, 203, 204, 303, 304]
+            [201, 202, 301, 302, 203, 204]
         ),
-        'conversation_masks': np.array([1, 1, 1, 1, 1, 1, 1, 1]),
+        'conversation_masks': np.array([1, 1, 1, 1, 1, 1]),
         'trajectory_reward': (
             3.5
         ),  # 1.0 + 2.0 + 0.5 (final reward from final_reward_fn)
@@ -299,7 +304,7 @@ class TrajectoryCollectEngineTest(absltest.TestCase):
             'reward_latency': 0.0,
             'reward_cpu_time': 0.0,
         },
-        'old_logprobs': np.array([1, 1, 0, 0, 1, 1, 0, 0]),
+        'old_logprobs': np.array([1, 1, 0, 0, 1, 1]),
         'policy_version': None,
         'original_input': {'some': 'task'},
         'group_id': None,
@@ -337,12 +342,9 @@ class TrajectoryCollectEngineTest(absltest.TestCase):
 
     # Verify that tokenization for environment observations
     # has contains_generation_msg=True.
-    self.assertEqual(mock_convert.call_count, 3)
+    self.assertEqual(mock_convert.call_count, 2)
     self.assertTrue(
         mock_convert.call_args_list[1].kwargs['contains_generation_msg']
-    )
-    self.assertTrue(
-        mock_convert.call_args_list[2].kwargs['contains_generation_msg']
     )
 
   @mock.patch.object(utils, 'tokenize_and_generate_masks')
@@ -598,16 +600,20 @@ class TrajectoryCollectEngineTest(absltest.TestCase):
 
     # Verify status is MAX_STEPS_REACHED
     self.assertEqual(
-        token_data['status'], agent_types.TrajectoryStatus.MAX_STEPS_REACHED.name
+        token_data['status'],
+        agent_types.TrajectoryStatus.MAX_STEPS_REACHED.name,
     )
 
     # Verify final reward was NOT called
     self.mock_final_reward_fn.assert_not_called()
 
     # Verify masks are zeroed out
-    # Assistant tokens (201, 202) and Env tokens (301) should have masks [0, 0, 0]
+    # Assistant tokens (201, 202) and Env tokens (301) should have masks
+    # [0, 0, 0]
     expected_masks = np.array([0, 0, 0])
-    np.testing.assert_array_equal(token_data['conversation_masks'], expected_masks)
+    np.testing.assert_array_equal(
+        token_data['conversation_masks'], expected_masks
+    )
 
   @mock.patch.object(utils, 'tokenize_and_generate_masks')
   def test_overlong_filter_disabled_does_not_mask_out(self, mock_convert):
@@ -637,7 +643,9 @@ class TrajectoryCollectEngineTest(absltest.TestCase):
 
     # Verify masks are NOT zeroed out
     expected_masks = np.array([1, 1, 1])
-    np.testing.assert_array_equal(token_data['conversation_masks'], expected_masks)
+    np.testing.assert_array_equal(
+        token_data['conversation_masks'], expected_masks
+    )
 
   @mock.patch.object(utils, 'tokenize_and_generate_masks')
   def test_overlong_filter_does_not_mask_out_on_success(self, mock_convert):
@@ -663,11 +671,17 @@ class TrajectoryCollectEngineTest(absltest.TestCase):
     token_data = asyncio.run(self._run_collect(engine, mode='Token'))
 
     # Verify status is SUCCEEDED
-    self.assertEqual(token_data['status'], agent_types.TrajectoryStatus.SUCCEEDED.name)
+    self.assertEqual(
+        token_data['status'], agent_types.TrajectoryStatus.SUCCEEDED.name
+    )
 
-    # Verify masks are NOT zeroed out
-    expected_masks = np.array([1, 1, 1])
-    np.testing.assert_array_equal(token_data['conversation_masks'], expected_masks)
+    # Verify masks are NOT zeroed out.
+    # Note: Terminal-step env tokens are not appended to the mask.
+    # Therefore, we only get the assistant tokens masks (2 tokens, value 1).
+    expected_masks = np.array([1, 1])
+    np.testing.assert_array_equal(
+        token_data['conversation_masks'], expected_masks
+    )
 
 
 if __name__ == '__main__':
