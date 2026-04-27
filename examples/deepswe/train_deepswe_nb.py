@@ -421,11 +421,12 @@ chat_parser = template_parser.QwenChatTemplateParser(tokenizer)
 print("Loading Dataset...")
 
 dataset = load_dataset(
-    "R2E-Gym/R2E-Gym-V1",
+    "R2E-Gym/R2E-Gym-Subset",
     split="train",
     cache_dir=DATASET_CACHE,
     trust_remote_code=True,
 )
+
 
 def transform(entry):
   for k, v in entry.items():
