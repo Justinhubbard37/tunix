@@ -191,6 +191,12 @@ class TestNaming(parameterized.TestCase):
         (expected_family, expected_version),
     )
 
+  def test_get_model_family_and_version_format_agnostic(self):
+    self.assertEqual(
+        naming.get_model_family_and_version('gemma2-2b-it'),
+        naming.get_model_family_and_version('gemma2_2b_it'),
+    )
+
   def test_get_model_family_and_version_invalid_fails(self):
     with self.assertRaisesRegex(
         ValueError, 'Could not determine model family for: foo-bar.'

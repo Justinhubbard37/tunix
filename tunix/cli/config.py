@@ -143,7 +143,10 @@ def _dict_to_cli_args(
       else:
         yield f"{new_key}={{}}"
     else:
-      yield f"{new_key}={v}"
+      if v is None:
+        yield f"{new_key}=null"
+      else:
+        yield f"{new_key}={v}"
 
 
 class HyperParameters:

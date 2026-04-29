@@ -632,6 +632,12 @@ class ConfigTest(parameterized.TestCase):
       else:
         config.initialize(argv)
 
+  def test_dict_to_cli_args_with_none(self):
+    d = {"a": 1, "b": None, "c": {"d": None, "e": 2}}
+    expected = ["a=1", "b=null", "c.d=null", "c.e=2"]
+    got = list(config._dict_to_cli_args(d))
+    self.assertEqual(expected, got)
+
 
 if __name__ == "__main__":
   if "HF_TOKEN" not in os.environ:
